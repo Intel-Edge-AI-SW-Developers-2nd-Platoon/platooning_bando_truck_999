@@ -12,21 +12,17 @@ The system that controls three or more vehicles by implementing platooning in a 
 **yeongdaekim(roby238)**
 - Project Leader
 - Git Manager
-- Expression Calculating
 - Create Deliverables for Develop
 
 **User3198352(User3198352)**
 - Project Manager
-- 
-- Hand Pose Estimaion
+- Interface ECU with Motor Driver 
 - Create Deliverables for Develop
 
 **Judy(jjooeun)**
-- Image Preprocessing
 - Create Deliverables for Develop
   
 **simpleis6est(simpleis6est)**
-- Image Preprocessing
 - Create Deliverables for Develop
 
   
@@ -35,24 +31,9 @@ The system that controls three or more vehicles by implementing platooning in a 
 
 * Enter below code to run this project.
 
-```shell
-git clone https://github.com/Intel-Edge-AI-SW-Developers-2nd-Team-1/BoardMaestro.git
-```
-
 ## Prerequite
 
 * Create new python virtual environment for this project.
-
-```shell
-# Create virtual env.
-python3 -m venv board_maestro
-
-# Activate virtual env.
-source board_maestro/bin/activate
-
-# Install requirements.
-pip install -r requirements.txt
-```
 
 ## Steps to run
 
