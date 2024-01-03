@@ -5,7 +5,6 @@ The system that controls three or more vehicles by implementing platooning in a 
 ![bando_truck_999_HLD](https://github.com/Intel-Edge-AI-SW-Developers-2nd-Platoon/platooning_bando_truck_999/assets/45201672/42225cf4-90c1-4001-b70e-d1f72436401d)
 
 ## Sequence Diagram
-![Whole Sequence Diagram drawio](https://github.com/roby238/BoardMaestro/assets/45201672/b28c0dff-38d2-4396-9cba-d74d72cf9517)
 
 ## Contributors
 
@@ -37,9 +36,7 @@ The system that controls three or more vehicles by implementing platooning in a 
 
 ## Steps to run
 
-1. How to run with python file.
-
-2. How to run with bash file
+1. How to run with 
 
 ## Output
   
