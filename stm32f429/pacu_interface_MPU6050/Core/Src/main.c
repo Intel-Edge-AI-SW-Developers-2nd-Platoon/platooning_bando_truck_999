@@ -71,7 +71,8 @@ static void MX_USB_OTG_FS_PCD_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint8_t tx_buff[] = {'c'};
+uint8_t rx_buff[] = {0};
 /* USER CODE END 0 */
 
 /**
@@ -107,7 +108,9 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_UART_Transmit_IT(&huart3, tx_buff, 1);
+  HAL_Delay(100);
+  HAL_UART_Receive_IT(&huart3, rx_buff, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -115,7 +118,8 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-
+	 HAL_UART_Transmit_IT(&huart3, tx_buff, 1);
+	 HAL_Delay(10);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -387,7 +391,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	HAL_UART_Receive_IT(&huart3, rx_buff, 1);
+}
 /* USER CODE END 4 */
 
 /**
