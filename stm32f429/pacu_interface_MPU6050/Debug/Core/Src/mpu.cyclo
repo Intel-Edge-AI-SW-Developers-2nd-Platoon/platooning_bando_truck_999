@@ -1,0 +1,5 @@
+../Core/Src/mpu.c:17:6:mpu_init	2
+../Core/Src/mpu.c:29:6:mpu_regcbf	1
+../Core/Src/mpu.c:33:6:mpu_uart_cbf	11
+../Core/Src/mpu.c:115:6:mpu_avg_calc	3
+../Core/Src/mpu.c:143:6:mpu_proc	3

@@ -17,10 +17,10 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include "application.h"
 #include "main.h"
 #include "string.h"
 #include "cmsis_os.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -83,8 +83,8 @@ void StartDefaultTask(void *argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t tx_buff[] = {'c'};
-uint8_t rx_buff[] = {0};
+//uint8_t tx_buff[] = {'c'};
+//uint8_t rx_buff[] = {0};
 /* USER CODE END 0 */
 
 /**
@@ -121,9 +121,7 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit_IT(&huart3, tx_buff, 1);
-  HAL_Delay(100);
-  HAL_UART_Receive_IT(&huart3, rx_buff, 1);
+  application();
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -471,9 +469,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+/*void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	HAL_UART_Receive_IT(&huart3, rx_buff, 1);
-}
+}*/
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */

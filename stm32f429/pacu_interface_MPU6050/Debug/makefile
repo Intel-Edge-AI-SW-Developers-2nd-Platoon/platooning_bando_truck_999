@@ -9,6 +9,10 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/subdir.mk
 -include Drivers/STM32F4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
@@ -60,8 +64,8 @@ all: main-build
 main-build: pacu_interface_MPU6050.elf secondary-outputs
 
 # Tool invocations
-pacu_interface_MPU6050.elf pacu_interface_MPU6050.map: $(OBJS) $(USER_OBJS) /home/ubuntu/platooning_bando_truck_999/stm32f429/pacu_interface_MPU6050/STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "pacu_interface_MPU6050.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/ubuntu/platooning_bando_truck_999/stm32f429/pacu_interface_MPU6050/STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="pacu_interface_MPU6050.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+pacu_interface_MPU6050.elf pacu_interface_MPU6050.map: $(OBJS) $(USER_OBJS) D:\platooning_bando_truck_999-feature-pacu-interface-MPU6050\stm32f429\pacu_interface_MPU6050\STM32F429ZITX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "pacu_interface_MPU6050.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\platooning_bando_truck_999-feature-pacu-interface-MPU6050\stm32f429\pacu_interface_MPU6050\STM32F429ZITX_FLASH.ld" --specs=nosys.specs -Wl,-Map="pacu_interface_MPU6050.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -u _scanf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
