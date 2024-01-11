@@ -11,39 +11,55 @@ The system that controls three or more vehicles by implementing platooning in a 
 **yeongdaekim(roby238)**
 - Project Leader
 - Git Manager
-- Create Deliverables for Develop
+- Interface MPU6050 module(gyroscope) on PACU
+- Interface Ethernet module on ECU/PACU
+- Wrtie README.md
 
 **User3198352(User3198352)**
 - Project Manager
-- Interface ECU with Motor Driver 
-- Create Deliverables for Develop
-
-**Judy(jjooeun)**
+- Interface Motor Driver on ECU
+- Implement manual drive with HW and GUI
 - Create Deliverables for Develop
 
 **simpleis6est(simpleis6est)**
+- Documentation
+- Interface HC-SR04 on PACU
+- Jetson Nano Server/Client Implement
 - Create Deliverables for Develop
 
 
-
 ## Clone code
-
 * Enter below code to run this project.
 
 ## Prerequite
-
 * Create new python virtual environment for this project.
 
 ## Steps to run
-
 1. How to run with 
 
 ## Output
 
 ## Commit rules
+- Tag?
+  ```
+  gpg --list-keys
+  ```
+  
+If you don't have any tag, generate it.
+- Generate a tag
+  ```
+  gpg --gen-key
+  ```
+
+If you have a tag, set signing tag.
+- Set signing tag
+  ```
+  git config --global user.signingkey XXXXXXXX
+  ```
+  
 - Sign a tag:
   ```
-  git tag -s MYTAG
+  git tag MYTAG -m 'my signed tag'
   # Creates a signed tag
   ```
 
