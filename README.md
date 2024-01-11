@@ -11,19 +11,22 @@ The system that controls three or more vehicles by implementing platooning in a 
 **yeongdaekim(roby238)**
 - Project Leader
 - Git Manager
+- High Level Design
 - Interface MPU6050 module(gyroscope) on PACU
 - Interface Ethernet module on ECU/PACU
-- Wrtie README.md
+- Create Deliverables for Develop
 
 **User3198352(User3198352)**
 - Project Manager
+- Medium Level Design
 - Interface Motor Driver on ECU
 - Implement manual drive with HW and GUI
 - Create Deliverables for Develop
 
 **simpleis6est(simpleis6est)**
 - Documentation
-- Interface HC-SR04 on PACU
+- Interface HC-SR04(Ultra sonic wave) on PACU
+- Interface GP2Y0A21(IR) on PACU
 - Jetson Nano Server/Client Implement
 - Create Deliverables for Develop
 
