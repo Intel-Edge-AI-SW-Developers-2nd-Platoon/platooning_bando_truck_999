@@ -36,8 +36,7 @@ printf("Ethernet Initializing...\r\n");
 	HAL_UARTEx_ReceiveToIdle_DMA(&huart4, eth_rx_buf, ETH_RX_BUF_SIZE);
 	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
 
-	sprintf((uint8_t *)eth_login_buf, "[%s:%s]", eth_local_id_buf, eth_local_pw_buf);
-	eth_write(eth_login_buf, strlen((uint8_t *)eth_login_buf));
+	eth_login(eth_local_id_buf, eth_local_pw_buf);
 
 	return 0;
 }
@@ -94,6 +93,23 @@ uint8_t eth_write(uint8_t *buf, uint16_t len) {
 		printf("FAIL TO TRANSMIT..\r\n");
 		return 1;
 	}
+	printf("%s\r\n", buf);
+	return 0;
+}
+
+/******************************************************************************
+function:	eth_login
+parameter:
+	buf: string data
+Info:  Send data to destination
+******************************************************************************/
+uint8_t eth_login(uint8_t *id, uint8_t *pw) {
+	sprintf((uint8_t *)eth_login_buf, "[%s:%s]", id, pw);
+	if(eth_write(eth_login_buf, strlen((uint8_t *)eth_login_buf))) {
+		printf("Fail to login..\r\n");
+		return 1;
+	}
+	memset(eth_login_buf, 0, sizeof(uint8_t) * ETH_LOGIN_BUF_SIZE);
 	return 0;
 }
 
@@ -108,10 +124,11 @@ uint8_t eth_send_data(uint8_t *buf) {
 		printf("Send data is empty..\r\n");
 		return 1;
 	}
-	sprintf((uint8_t *)eth_send_buf, "[%s]%s", eth_dest_id_buf, buf);
+	sprintf((uint8_t *)eth_send_buf, "[%s]%s\n", eth_dest_id_buf, buf);
 	if(eth_write(eth_send_buf, strlen((char *)eth_send_buf))) {
 		printf("Fail to send data..\r\n");
 		return 1;
 	}
+	memset(eth_send_buf, 0, sizeof(uint8_t) * ETH_SEND_BUF_SIZE);
 	return 0;
 }

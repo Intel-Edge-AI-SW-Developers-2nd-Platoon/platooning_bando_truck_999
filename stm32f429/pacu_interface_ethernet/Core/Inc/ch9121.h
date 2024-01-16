@@ -49,10 +49,10 @@ uint8_t CH9121_MODE 			= 1;						// 0:TCP_SERVER
 															// 1:TCP_CLIENT
 															// 2:UDP_SERVER
 															// 3:UDP_CLIENT
-uint8_t CH9121_LOCAL_IP[4] 		= { 10,  10, 141, 203};   	// LOCAL IP
+uint8_t CH9121_LOCAL_IP[4] 		= { 10,  10, 141, 207};   	// LOCAL IP
 uint8_t CH9121_GATEWAY[4] 		= { 10,  10, 141, 254};     // GATEWAY
 uint8_t CH9121_SUBNET_MASK[4] 	= {255, 255, 255,   0}; 	// SUBNET MASK
-uint8_t CH9121_TARGET_IP[4] 	= { 10,  10, 141,  26};   	// TARGET_IP
+uint8_t CH9121_TARGET_IP[4] 	= { 10,  10, 141, 181};   	// TARGET_IP
 uint8_t CH9121_RANDOM_PORT 		= 0;                     	// Random port    1:on   0:off
 uint16_t CH9121_PORT1 			= 3000;                     // LOCAL PORT1
 uint16_t CH9121_TARGET_PORT 	= 5000;                 	// TARGET PORT

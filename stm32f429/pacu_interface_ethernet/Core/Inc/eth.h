@@ -33,11 +33,10 @@ extern DMA_HandleTypeDef hdma_uart4_rx;
 #define ETH_LOGIN_BUF_SIZE		16
 #define ETH_SEND_BUF_SIZE		256
 
-static uint8_t eth_local_id_buf[] = "PACU";
-static uint8_t eth_local_pw_buf[] = "PASSWD";
+static uint8_t eth_local_id_buf[] 	= "18";
+static uint8_t eth_local_pw_buf[] 	= "PASSWD";
 static uint8_t eth_login_buf[ETH_LOGIN_BUF_SIZE];
-static uint8_t eth_dest_id_buf[] = "CCU";
-//static uint8_t eth_send_data_buf[SEND_BUF_SIZE/2];
+static uint8_t eth_dest_id_buf[] 	= "24";
 static uint8_t eth_send_buf[ETH_SEND_BUF_SIZE+1];
 
 
@@ -53,6 +52,8 @@ void eth_uart_cbf(uint16_t Size);
 void eth_uart_irq_handler(void);
 void eth_read(uint16_t Size);
 uint8_t eth_write(uint8_t *buf, uint16_t len);
+uint8_t eth_login(uint8_t *id, uint8_t *pw);
+uint8_t eth_send_data(uint8_t *buf);
 
 #ifdef __cplusplus
 }
