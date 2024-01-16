@@ -1,0 +1,5 @@
+../Core/Src/eth.c:15:9:eth_init	2
+../Core/Src/eth.c:51:9:eth_regcbf	1
+../Core/Src/eth.c:62:6:eth_read	2
+../Core/Src/eth.c:92:9:eth_write	2
+../Core/Src/eth.c:106:9:eth_send_data	3
