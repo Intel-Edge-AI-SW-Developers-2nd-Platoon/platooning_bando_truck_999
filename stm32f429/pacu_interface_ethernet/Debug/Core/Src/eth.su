@@ -1,0 +1,6 @@
+../Core/Src/eth.c:15:9:eth_init	8	static
+../Core/Src/eth.c:50:9:eth_regcbf	16	static
+../Core/Src/eth.c:61:6:eth_read	24	static
+../Core/Src/eth.c:91:9:eth_write	16	static
+../Core/Src/eth.c:106:9:eth_login	16	static
+../Core/Src/eth.c:122:9:eth_send_data	16	static

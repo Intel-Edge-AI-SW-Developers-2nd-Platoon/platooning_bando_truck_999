@@ -1,0 +1,9 @@
+../Core/Src/main.c:82:5:main	1
+../Core/Src/main.c:130:6:SystemClock_Config	3
+../Core/Src/main.c:176:13:MX_ETH_Init	2
+../Core/Src/main.c:225:13:MX_UART4_Init	2
+../Core/Src/main.c:258:13:MX_USART3_UART_Init	2
+../Core/Src/main.c:291:13:MX_USB_OTG_FS_PCD_Init	2
+../Core/Src/main.c:324:13:MX_DMA_Init	1
+../Core/Src/main.c:342:13:MX_GPIO_Init	1
+../Core/Src/main.c:420:6:Error_Handler	1

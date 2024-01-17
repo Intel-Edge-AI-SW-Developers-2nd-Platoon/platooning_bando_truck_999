@@ -1,0 +1,5 @@
+../Core/Src/cli.c:31:6:cli_init	1
+../Core/Src/cli.c:37:6:cli_parser	8
+../Core/Src/cli.c:85:5:cli_help	2
+../Core/Src/cli.c:95:5:cli_echo	2
+../Core/Src/cli.c:105:5:cli_eth	2
