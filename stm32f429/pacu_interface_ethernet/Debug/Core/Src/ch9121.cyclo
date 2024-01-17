@@ -1,0 +1,6 @@
+../Core/Src/ch9121.c:15:6:ch9121_set_conf	1
+../Core/Src/ch9121.c:41:6:ch9121_send_4_bytes	5
+../Core/Src/ch9121.c:64:6:ch9121_send_5_bytes	5
+../Core/Src/ch9121.c:90:6:ch9121_send_7_bytes	5
+../Core/Src/ch9121.c:112:6:ch9121_send_baud	5
+../Core/Src/ch9121.c:138:6:ch9121_update_conf	4
