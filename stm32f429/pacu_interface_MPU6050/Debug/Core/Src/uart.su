@@ -1,0 +1,5 @@
+../Core/Src/uart.c:36:6:uart_init	8	static
+../Core/Src/uart.c:49:6:uart_regcbf	16	static
+../Core/Src/uart.c:54:6:uart_proc	16	static
+../Core/Src/uart.c:68:6:HAL_UART_RxCpltCallback	24	static
+../Core/Src/uart.c:92:5:__io_putchar	16	static
