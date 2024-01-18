@@ -43,8 +43,7 @@ CCU_BUF_T ccu_buf[2];
 
 struct timespec prev_time, curr_time;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	int sock;
 	struct sockaddr_in serv_addr;
 	pthread_t snd_thread, rcv_thread, timer_thread;
