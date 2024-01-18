@@ -80,23 +80,23 @@ int main(int argc, char *argv[]) {
 	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock);
 
 	pthread_join(snd_thread, &thread_return);
-	//	pthread_join(rcv_thread, &thread_return);
-	//	pthread_join(timer_thread, &thread_return);
+	pthread_join(rcv_thread, &thread_return);
+	pthread_join(timer_thread, &thread_return);
 	close(sock);
 	return 0;
 }
 
 void integral(int mode, char target, int pos) {
 	if (!pos) return;
-	int interval = (pacu_buf[mode].curr_time[pos].tv_sec - pacu_buf[mode].curr_time[pos-1].tv_sec) + (pacu_buf[mode].curr_time[pos].tv_nsec - pacu_buf[mode].curr_time[pos-1].tv_nsec);
+	int interval = ((pacu_buf[mode].curr_time[pos].tv_sec - pacu_buf[mode].curr_time[pos-1].tv_sec) + (pacu_buf[mode].curr_time[pos].tv_nsec - pacu_buf[mode].curr_time[pos-1].tv_nsec))/1000000000;
 	if (target == 'a') {
-		ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval / 1000000;
-		ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval / 1000000;
+		ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
+		ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
-		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].velo_x[pos] * (double)interval / 1000000;
-		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].velo_y[pos] * (double)interval / 1000000;
+		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].velo_x[pos] * (double)interval;
+		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].velo_y[pos] * (double)interval;
 	}	
 }
 
@@ -171,7 +171,7 @@ void * recv_msg(void * arg) {
 			sscanf(pArray[4], "%lf", &(pacu_buf[0].acc_y[pacu_pos[0]]));	
 			sscanf(pArray[5], "%lf", &(pacu_buf[0].gyro[pacu_pos[0]]));	
 			sscanf(pArray[6], "%lf", &(pacu_buf[0].angle[pacu_pos[0]]));
-			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[0].curr_time));
+			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[0].curr_time[pacu_pos[0]]));
 			integral(0, 'a', pacu_pos[0]);
 			integral(0, 'd', pacu_pos[0]);
 			pacu_pos[0]++;
@@ -183,7 +183,7 @@ void * recv_msg(void * arg) {
 			sscanf(pArray[4], "%lf", &(pacu_buf[1].acc_y[pacu_pos[1]]));	
 			sscanf(pArray[5], "%lf", &(pacu_buf[1].gyro[pacu_pos[1]]));	
 			sscanf(pArray[6], "%lf", &(pacu_buf[1].angle[pacu_pos[1]]));	
-			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[1].curr_time));
+			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[1].curr_time[pacu_pos[1]]));
 			integral(1, 'a', pacu_pos[1]);
 			integral(1, 'd', pacu_pos[1]);
 			pacu_pos[1]++;
@@ -196,12 +196,12 @@ void * recv_msg(void * arg) {
 void * timer_msg(void * arg) {
 	int *sock = (int *)arg;
 	clock_gettime(CLOCK_MONOTONIC, &(prev_time));
-	clock_gettime(CLOCK_MONOTONIC, &(curr_time));
 	int global_interval;
 	while(1) {
-		global_interval = (curr_time.tv_nsec - prev_time.tv_nsec) / 1000000;
-		if (global_interval >= 100) {
-			sprintf(msg, "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf\n", 
+		clock_gettime(CLOCK_MONOTONIC, &(curr_time));
+		global_interval = ((curr_time.tv_nsec - prev_time.tv_nsec) + (curr_time.tv_sec - prev_time.tv_sec));
+		if (global_interval >= 1000000000) {
+			sprintf(msg, "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%ld@%ld\n", 
 					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
 					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
@@ -210,12 +210,17 @@ void * timer_msg(void * arg) {
 					(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
 					(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].angle[pacu_pos[0]] + pacu_buf[1].angle[pacu_pos[1]]) / 2, 
-					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2); 
-			write(*sock, msg, strlen(msg));
+					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
+					(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) / 2,
+					(pacu_buf[0].curr_time[pacu_pos[0]].tv_nsec + pacu_buf[1].curr_time[pacu_pos[1]].tv_nsec) / 2);
+					 
+			if (write(*sock, msg, strlen(msg)) <= 0) {
+				*sock = -1;
+				return NULL;
+			}
 			prev_time.tv_sec = curr_time.tv_sec;
 			prev_time.tv_nsec = curr_time.tv_nsec;
 		}	
-		clock_gettime(CLOCK_MONOTONIC, &(curr_time));
 	}
 }
 
