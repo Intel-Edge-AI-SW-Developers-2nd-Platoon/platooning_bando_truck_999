@@ -1,7 +1,7 @@
 #CC:=arm-linux-gcc
 CC:=gcc
 
-TARGET_SRV=ccu-server
+TARGET_SRV=ccu_server
 OBJECT_SRV=$(TARGET_SRV).o 
 
 TARGET_CLN=ccu_client
