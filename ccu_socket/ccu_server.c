@@ -16,10 +16,10 @@
 #include <time.h>
 #include <errno.h>
 
-#define BUF_SIZE 100
+#define BUF_SIZE 1024
 #define MAX_CLNT 32
 #define ID_SIZE 10
-#define ARR_CNT 5
+#define ARR_CNT 16
 
 #define DEBUG
 typedef struct {
