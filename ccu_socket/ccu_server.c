@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 	CLIENT_INFO client_info[MAX_CLNT] = {{0,-1,"","CCU","PASSWD"}, \
 			 {0,-1,"","PACU1","PASSWD"},  {0,-1,"","PACU2","PASSWD"}, \
 			 {0,-1,"","RESERVE1","PASSWD"},  {0,-1,"","RESERVE2","PASSWD"}, \
-			 {0,-1,"","RESERVE3","PASSWD"},  {0,-1,"","7","PASSWD"}, \
+			 {0,-1,"","RESERVE3","PASSWD"},  {0,-1,"","GUI","PASSWD"}, \
 			 {0,-1,"","8","PASSWD"},  {0,-1,"","9","PASSWD"}, \
 			 {0,-1,"","10","PASSWD"},  {0,-1,"","11","PASSWD"}, \
 			 {0,-1,"","12","PASSWD"},  {0,-1,"","13","PASSWD"}, \
