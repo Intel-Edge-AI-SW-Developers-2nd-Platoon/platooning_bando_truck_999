@@ -1,10 +1,10 @@
 #CC:=arm-linux-gcc
 CC:=gcc
 
-TARGET_SRV=iot_server
+TARGET_SRV=ccu-server
 OBJECT_SRV=$(TARGET_SRV).o 
 
-TARGET_CLN=iot_client
+TARGET_CLN=ccu_client
 OBJECT_CLN=$(TARGET_CLN).o 
 
 #LDFLAGS=-D_REENTRANT -pthread -lmysqlclient
