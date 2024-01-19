@@ -3,6 +3,7 @@ The system that controls three or more vehicles by implementing platooning in a 
 
 ## High Level Design
 ![bando_truck_999_HLD](https://github.com/Intel-Edge-AI-SW-Developers-2nd-Platoon/platooning_bando_truck_999/assets/45201672/42225cf4-90c1-4001-b70e-d1f72436401d)
+![image](https://github.com/Intel-Edge-AI-SW-Developers-2nd-Platoon/platooning_bando_truck_999/assets/45201672/474f715d-6610-4f62-a177-c4b9136d9dc8)
 
 ## Sequence Diagram
 
