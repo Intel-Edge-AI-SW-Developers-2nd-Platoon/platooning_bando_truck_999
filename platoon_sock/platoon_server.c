@@ -59,10 +59,10 @@ int main(int argc, char *argv[]) {
 		char msg[BUF_SIZE];
 
 		CLIENT_INFO client_info[MAX_CLNT] = {{0,-1,"","PLATOON","PASSWD"}, \
-				{0,-1,"","LEADER","PASSWD"},  {0,-1,"","FOLLOWER1","PASSWD"}, \
-				{0,-1,"","FOLLOWER2","PASSWD"},  {0,-1,"","RESERVE1","PASSWD"}, \
+				{0,-1,"","CAR_A","PASSWD"},  {0,-1,"","CAR_B","PASSWD"}, \
+				{0,-1,"","CAR_C","PASSWD"},  {0,-1,"","RESERVE1","PASSWD"}, \
 				{0,-1,"","RESERVE2","PASSWD"},  {0,-1,"","RESERVE3","PASSWD"}, \
-				{0,-1,"","8","PASSWD"},  {0,-1,"","9","PASSWD"}, \
+				{0,-1,"","GUI","PASSWD"},  {0,-1,"","9","PASSWD"}, \
 				{0,-1,"","10","PASSWD"},  {0,-1,"","11","PASSWD"}, \
 				{0,-1,"","12","PASSWD"},  {0,-1,"","13","PASSWD"}, \
 				{0,-1,"","14","PASSWD"},  {0,-1,"","15","PASSWD"}, \

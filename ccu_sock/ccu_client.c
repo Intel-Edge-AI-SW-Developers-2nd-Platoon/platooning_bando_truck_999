@@ -53,8 +53,9 @@ int pacu_pos[2];
 
 struct timeval prev_time, curr_time;
 
+int sock[2];
+
 int main(int argc, char *argv[]) {
-	int sock[2];
 	struct sockaddr_in ccu_serv_addr;
 	struct sockaddr_in platoon_serv_addr;
 	pthread_t ccu_snd_thread, ccu_rcv_thread, platoon_snd_thread, platoon_rcv_thread, timer_thread;
@@ -100,9 +101,9 @@ int main(int argc, char *argv[]) {
 
 	pthread_create(&ccu_rcv_thread, NULL, ccu_recv_msg, (void *)&sock[0]);
 	pthread_create(&ccu_snd_thread, NULL, ccu_send_msg, (void *)&sock[0]);
-	pthread_create(&platoon_rcv_thread, NULL, platoon_recv_msg, (void *)&sock[1]);
+	pthread_create(&platoon_rcv_thread, NULL, platoon_recv_msg, (void *)&sock[0]);
 	pthread_create(&platoon_snd_thread, NULL, platoon_send_msg, (void *)&sock[1]);
-	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[1]);
+	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[0]);
 
 	pthread_join(ccu_snd_thread, &thread_return);
 	pthread_join(platoon_snd_thread, &thread_return);
@@ -246,7 +247,7 @@ void * platoon_send_msg(void * arg) {
 		newset = initset;
 		ret = select(STDIN_FILENO + 1, &newset, NULL, NULL, &tv);
 		if(FD_ISSET(STDIN_FILENO, &newset)) {
-			pthread_mutex_lock(&g_mutex[1]);
+			//pthread_mutex_lock(&g_mutex[1]);
 			fgets(&msg[1][0], BUF_SIZE, stdin);
 			if(!strncmp(&msg[1][0],"quit\n",5)) {
 				*sock = -1;
@@ -261,7 +262,7 @@ void * platoon_send_msg(void * arg) {
 				*sock = -1;
 				return NULL;
 			}
-			pthread_mutex_unlock(&g_mutex[1]);
+			//pthread_mutex_unlock(&g_mutex[1]);
 		}
 		if(ret == 0) {
 			if(*sock == -1) return NULL;
@@ -270,7 +271,7 @@ void * platoon_send_msg(void * arg) {
 }
 
 void * platoon_recv_msg(void * arg) {
-	int * sock = (int *)arg;	
+	int * sock = (int *)arg;
 	int i;
 	char *pToken;
 	char *pArray[ARR_CNT]={0};
@@ -280,9 +281,9 @@ void * platoon_recv_msg(void * arg) {
 	while(1) {
 		pthread_mutex_lock(&g_mutex[1]);
 		memset(name_msg,0x0,sizeof(name_msg));
-		str_len = read(*sock, name_msg, NAME_SIZE + BUF_SIZE );
+		str_len = read(*(sock + 1), name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
-			*sock = -1;
+			*(sock + 1) = -1;
 			return NULL;
 		}
 		name_msg[str_len] = 0;
@@ -296,11 +297,15 @@ void * platoon_recv_msg(void * arg) {
 		}
 		if (!strcmp(pArray[1],"PLATOON")) {
 		}
-		else if (!strcmp(pArray[1], "LEADER")) {
+		else if (!strcmp(pArray[1], "CAR_A")) {
+				sprintf(&msg[0][0], "[CAR_A]%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
+				write(*sock, &msg[0][0], strlen(&msg[0][0]));
 		}
-		else if (!strcmp(pArray[1], "FOLLOWER1")) {
+		else if (!strcmp(pArray[1], "CAR_B")) {
 		}
-		else if (!strcmp(pArray[1], "FOLLOWER2")) {
+		else if (!strcmp(pArray[1], "CAR_C")) {
+		}
+		else if (!strcmp(pArray[1], "GUI")) {
 		}
 		pthread_mutex_unlock(&g_mutex[1]);
 
@@ -323,7 +328,7 @@ void * timer_msg(void * arg) {
 			}
 			name_msg[0] = '\0';
 			
-			sprintf(&msg[1][0], "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld@%ld\n", 
+			sprintf(&msg[1][0], "[GUI]%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld@%ld\n", 
 					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
 					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
@@ -336,7 +341,7 @@ void * timer_msg(void * arg) {
 					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
 			
 			//strcmp(name_msg, msg);	 
-			write(*sock, &msg[1][0], strlen(&msg[1][0]));
+			write(*(sock + 1), &msg[1][0], strlen(&msg[1][0]));
 			
 			//pthread_mutex_unlock(&gMutex);
 			prev_time.tv_sec = curr_time.tv_sec;
