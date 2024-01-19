@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <signal.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define BUF_SIZE 1024
 #define NAME_SIZE 20
@@ -21,9 +21,9 @@ void * timer_msg(void * arg);
 void error_handling(char * msg);
 
 typedef struct {
-        time_t  tv_sec;
-        long    tv_nsec;
-} timespec;
+        time_t	tv_sec;
+        time_t	tv_usec;
+} timeval;
 
 typedef struct {
 	double dist[DATA_SIZE];
@@ -31,7 +31,7 @@ typedef struct {
 	double acc_y[DATA_SIZE];
 	double angle[DATA_SIZE];
 	double gyro[DATA_SIZE];
-	timespec curr_time[DATA_SIZE];
+	timeval curr_time[DATA_SIZE];
 } PACU_BUF_T;
 
 typedef struct {	
@@ -41,13 +41,15 @@ typedef struct {
 	double pos_y[DATA_SIZE];
 } CCU_BUF_T;
 
+pthread_mutex_t gMutex;
 char name[NAME_SIZE]="[Default]";
 char msg[BUF_SIZE];
 PACU_BUF_T pacu_buf[2];
 CCU_BUF_T ccu_buf[2];
 int pacu_pos[2];
+//int gettimeofday(struct timeval *tv, struct timezone *tz);
 
-struct timespec prev_time, curr_time;
+struct timeval prev_time, curr_time;
 
 int main(int argc, char *argv[]) {
 	int sock;
@@ -80,15 +82,15 @@ int main(int argc, char *argv[]) {
 	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock);
 
 	pthread_join(snd_thread, &thread_return);
-	pthread_join(rcv_thread, &thread_return);
-	pthread_join(timer_thread, &thread_return);
+	//pthread_join(rcv_thread, &thread_return);
+	//pthread_join(timer_thread, &thread_return);
 	close(sock);
 	return 0;
 }
 
 void integral(int mode, char target, int pos) {
 	if (!pos) return;
-	int interval = ((pacu_buf[mode].curr_time[pos].tv_sec - pacu_buf[mode].curr_time[pos-1].tv_sec) + (pacu_buf[mode].curr_time[pos].tv_nsec - pacu_buf[mode].curr_time[pos-1].tv_nsec))/1000000000;
+	int interval = ((pacu_buf[mode].curr_time[pos].tv_usec - pacu_buf[mode].curr_time[pos-1].tv_usec))/1000000000;
 	if (target == 'a') {
 		ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
 		ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
@@ -120,6 +122,7 @@ void * send_msg(void * arg) {
 		newset = initset;
 		ret = select(STDIN_FILENO + 1, &newset, NULL, NULL, &tv);
 		if(FD_ISSET(STDIN_FILENO, &newset)) {
+			pthread_mutex_lock(&gMutex);
 			fgets(msg, BUF_SIZE, stdin);
 			if(!strncmp(msg,"quit\n",5)) {
 				*sock = -1;
@@ -134,6 +137,7 @@ void * send_msg(void * arg) {
 				*sock = -1;
 				return NULL;
 			}
+			pthread_mutex_unlock(&gMutex);
 		}
 		if(ret == 0) {
 			if(*sock == -1) return NULL;
@@ -150,6 +154,7 @@ void * recv_msg(void * arg) {
 	int str_len;
 
 	while(1) {
+		pthread_mutex_lock(&gMutex);
 		memset(name_msg,0x0,sizeof(name_msg));
 		str_len = read(*sock, name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
@@ -171,7 +176,8 @@ void * recv_msg(void * arg) {
 			sscanf(pArray[4], "%lf", &(pacu_buf[0].acc_y[pacu_pos[0]]));	
 			sscanf(pArray[5], "%lf", &(pacu_buf[0].gyro[pacu_pos[0]]));	
 			sscanf(pArray[6], "%lf", &(pacu_buf[0].angle[pacu_pos[0]]));
-			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[0].curr_time[pacu_pos[0]]));
+			//clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[0].curr_time[pacu_pos[0]]));
+			gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 			integral(0, 'a', pacu_pos[0]);
 			integral(0, 'd', pacu_pos[0]);
 			pacu_pos[0]++;
@@ -183,25 +189,35 @@ void * recv_msg(void * arg) {
 			sscanf(pArray[4], "%lf", &(pacu_buf[1].acc_y[pacu_pos[1]]));	
 			sscanf(pArray[5], "%lf", &(pacu_buf[1].gyro[pacu_pos[1]]));	
 			sscanf(pArray[6], "%lf", &(pacu_buf[1].angle[pacu_pos[1]]));	
-			clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[1].curr_time[pacu_pos[1]]));
+			//clock_gettime(CLOCK_MONOTONIC, &(pacu_buf[1].curr_time[pacu_pos[1]]));
+			gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 			integral(1, 'a', pacu_pos[1]);
 			integral(1, 'd', pacu_pos[1]);
 			pacu_pos[1]++;
 			if (pacu_pos[1] >= DATA_SIZE) pacu_pos[1] = 0;
 		}
+		pthread_mutex_unlock(&gMutex);
 
 	}
 }
 
 void * timer_msg(void * arg) {
 	int *sock = (int *)arg;
-	clock_gettime(CLOCK_MONOTONIC, &(prev_time));
-	int global_interval;
+	char name_msg[NAME_SIZE + BUF_SIZE +1];
+	gettimeofday(&prev_time, NULL);
+	//gettimeofday(&curr_time, NULL);
+	double global_interval;
 	while(1) {
-		clock_gettime(CLOCK_MONOTONIC, &(curr_time));
-		global_interval = ((curr_time.tv_nsec - prev_time.tv_nsec) + (curr_time.tv_sec - prev_time.tv_sec));
-		if (global_interval >= 1000000000) {
-			sprintf(msg, "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%ld@%ld\n", 
+		//clock_gettime(CLOCK_MONOTONIC, &(curr_time));
+		gettimeofday(&curr_time, NULL);
+		global_interval = ((double)(curr_time.tv_sec - prev_time.tv_sec) * 1000 + (double)(curr_time.tv_usec - prev_time.tv_usec)/1000);
+		//if (curr_time.tv_nsec < prev_time.tv_usec) global_interval = curr_time.tv_usec - prev_time.tv_usec;
+		if (global_interval >= 100) {
+			//pthread_mutex_lock(&gMutex);
+			memset(msg,0,sizeof(msg));
+        		name_msg[0] = '\0';
+			
+			sprintf(msg, "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld@%ld\n", 
 					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
 					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
@@ -211,16 +227,19 @@ void * timer_msg(void * arg) {
 					(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].angle[pacu_pos[0]] + pacu_buf[1].angle[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
-					(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) / 2,
-					(pacu_buf[0].curr_time[pacu_pos[0]].tv_nsec + pacu_buf[1].curr_time[pacu_pos[1]].tv_nsec) / 2);
-					 
-			if (write(*sock, msg, strlen(msg)) <= 0) {
-				*sock = -1;
-				return NULL;
-			}
+					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
+			
+			//sprintf(msg, "[GUI]DATA@sdfgghhjk\n");
+			strcmp(name_msg, msg);	 
+			write(*sock, msg, strlen(msg));
+			
+			//pthread_mutex_unlock(&gMutex);
 			prev_time.tv_sec = curr_time.tv_sec;
-			prev_time.tv_nsec = curr_time.tv_nsec;
-		}	
+			prev_time.tv_usec = curr_time.tv_usec;
+			//printf("%ld\n", curr_time.tv_usec);	
+			//printf("%lf\n", (double)curr_time.tv_sec + (double)curr_time.tv_usec / 1000000);	
+		}
+		
 	}
 }
 
