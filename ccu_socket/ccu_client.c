@@ -44,7 +44,7 @@ typedef struct {
 } CCU_BUF_T;
 
 pthread_mutex_t g_mutex[2];
-char name[2][NAME_SIZE]="[Default]";
+char name[2][NAME_SIZE]={"[Default]", "[Default]"};
 char msg[2][BUF_SIZE];
 PACU_BUF_T pacu_buf[2];
 CCU_BUF_T ccu_buf[2];
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 	int sock[2];
 	struct sockaddr_in ccu_serv_addr;
 	struct sockaddr_in platoon_serv_addr;
-	pthread_t ccu_snd_thread, ccu_rcv_thread, timer_thread;
+	pthread_t ccu_snd_thread, ccu_rcv_thread, platoon_snd_thread, platoon_rcv_thread, timer_thread;
 	void * thread_return;
 
 	if(argc != 7) {
@@ -68,7 +68,12 @@ int main(int argc, char *argv[]) {
 	if(sock[0] == -1) {
 		error_handling("socket() error");
 	}
-	memset(&serv_addr, 0, sizeof(serv_addr));
+	sock[1] = socket(PF_INET, SOCK_STREAM, 0);
+	if(sock[1] == -1) {
+		error_handling("socket() error");
+	}
+	memset(&ccu_serv_addr, 0, sizeof(ccu_serv_addr));
+	memset(&platoon_serv_addr, 0, sizeof(platoon_serv_addr));
 	
 	ccu_serv_addr.sin_family=AF_INET;
 	ccu_serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
@@ -85,13 +90,13 @@ int main(int argc, char *argv[]) {
 		error_handling("connect() error");
 	}
 
-	sprintf(name, "%s",argv[3]);
-	sprintf(msg,"[%s:PASSWD]",name);
-	write(sock[0], msg, strlen(msg));
+	sprintf(&name[0][0], "%s",argv[3]);
+	sprintf(&msg[0][0],"[%s:PASSWD]",&name[0][0]);
+	write(sock[0], &msg[0][0], strlen(&msg[0][0]));
 	
-	sprintf(name, "%s",argv[6]);
-	sprintf(msg,"[%s:PASSWD]",name);
-	write(sock[1], msg, strlen(msg));
+	sprintf(&name[1][0], "%s",argv[6]);
+	sprintf(&msg[1][0],"[%s:PASSWD]",&name[1][0]);
+	write(sock[1], &msg[1][0], strlen(&msg[1][0]));
 
 	pthread_create(&ccu_rcv_thread, NULL, ccu_recv_msg, (void *)&sock[0]);
 	pthread_create(&ccu_snd_thread, NULL, ccu_send_msg, (void *)&sock[0]);
@@ -135,7 +140,7 @@ void * ccu_send_msg(void * arg) {
 
 	fputs("Input a message! [ID]msg (Default ID:ALLMSG)\n",stdout);
 	while(1) {
-		memset(msg,0,sizeof(msg));
+		memset(&msg[0][0],0,sizeof(&msg[0][0]));
 		name_msg[0] = '\0';
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
@@ -143,16 +148,18 @@ void * ccu_send_msg(void * arg) {
 		ret = select(STDIN_FILENO + 1, &newset, NULL, NULL, &tv);
 		if(FD_ISSET(STDIN_FILENO, &newset)) {
 			pthread_mutex_lock(&g_mutex[0]);
-			fgets(msg, BUF_SIZE, stdin);
-			if(!strncmp(msg,"quit\n",5)) {
+			fgets(&msg[0][0], BUF_SIZE, stdin);
+			if(!strncmp(&msg[0][0],"quit\n",5)) {
 				*sock = -1;
 				return NULL;
 			}
-			else if(msg[0] != '[') {
+			//else if(!strncmp(&msp[0][0],"[]")) {
+			//}
+			else if(msg[0][0] != '[') {
 				strcat(name_msg,"[ALLMSG]");
-				strcat(name_msg,msg);
+				strcat(name_msg,msg[0]);
 			}
-			else strcpy(name_msg,msg);
+			else strcpy(name_msg,&msg[0][0]);
 			if(write(*sock, name_msg, strlen(name_msg))<=0) {
 				*sock = -1;
 				return NULL;
@@ -232,7 +239,7 @@ void * platoon_send_msg(void * arg) {
 
 	fputs("Input a message! [ID]msg (Default ID:ALLMSG)\n",stdout);
 	while(1) {
-		memset(msg,0,sizeof(msg));
+		memset(&msg[1][0],0,sizeof(&msg[1][0]));
 		name_msg[0] = '\0';
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
@@ -240,16 +247,16 @@ void * platoon_send_msg(void * arg) {
 		ret = select(STDIN_FILENO + 1, &newset, NULL, NULL, &tv);
 		if(FD_ISSET(STDIN_FILENO, &newset)) {
 			pthread_mutex_lock(&g_mutex[1]);
-			fgets(msg, BUF_SIZE, stdin);
-			if(!strncmp(msg,"quit\n",5)) {
+			fgets(&msg[1][0], BUF_SIZE, stdin);
+			if(!strncmp(&msg[1][0],"quit\n",5)) {
 				*sock = -1;
 				return NULL;
 			}
-			else if(msg[0] != '[') {
+			else if(msg[1][0] != '[') {
 				strcat(name_msg,"[ALLMSG]");
-				strcat(name_msg,msg);
+				strcat(name_msg,&msg[1][0]);
 			}
-			else strcpy(name_msg,msg);
+			else strcpy(name_msg,&msg[1][0]);
 			if(write(*sock, name_msg, strlen(name_msg))<=0) {
 				*sock = -1;
 				return NULL;
@@ -312,11 +319,11 @@ void * timer_msg(void * arg) {
 			//pthread_mutex_lock(&gMutex);
 			
         		for (int i = 0; i < 2; i++) {
-				memset(&msg[i],0,sizeof(&msg[i]));
+				memset(&msg[i][0],0,sizeof(&msg[i][0]));
 			}
 			name_msg[0] = '\0';
 			
-			sprintf(&msg[1], "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld@%ld\n", 
+			sprintf(&msg[1][0], "[GUI]DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld@%ld\n", 
 					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
 					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
 					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
@@ -329,7 +336,7 @@ void * timer_msg(void * arg) {
 					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
 			
 			//strcmp(name_msg, msg);	 
-			write(*sock, &msg[1], strlen(&msg[1]));
+			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 			
 			//pthread_mutex_unlock(&gMutex);
 			prev_time.tv_sec = curr_time.tv_sec;
