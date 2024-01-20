@@ -44,7 +44,7 @@ typedef struct {
 } CCU_BUF_T;
 
 pthread_mutex_t g_mutex[2];
-char name[2][NAME_SIZE]="[Default]";
+char name[2][NAME_SIZE]={"[Default]", "[Default]"};
 char msg[2][BUF_SIZE];
 PACU_BUF_T pacu_buf[2];
 CCU_BUF_T ccu_buf[2];
@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 	int sock[2];
 	struct sockaddr_in ccu_serv_addr;
 	struct sockaddr_in platoon_serv_addr;
-	pthread_t ccu_snd_thread, ccu_rcv_thread, timer_thread;
+	pthread_t ccu_snd_thread, ccu_rcv_thread, timer_thread, platoon_snd_thread, platoon_rcv_thread;
 	void * thread_return;
 
 	if(argc != 7) {
@@ -68,7 +68,13 @@ int main(int argc, char *argv[]) {
 	if(sock[0] == -1) {
 		error_handling("socket() error");
 	}
-	memset(&serv_addr, 0, sizeof(serv_addr));
+	memset(&ccu_serv_addr, 0, sizeof(ccu_serv_addr));
+	
+	sock[1] = socket(PF_INET, SOCK_STREAM, 0);
+	if(sock[1] == -1) {
+		error_handling("socket() error");
+	}
+	memset(&platoon_serv_addr, 0, sizeof(platoon_serv_addr));
 	
 	ccu_serv_addr.sin_family=AF_INET;
 	ccu_serv_addr.sin_addr.s_addr = inet_addr(argv[1]);
