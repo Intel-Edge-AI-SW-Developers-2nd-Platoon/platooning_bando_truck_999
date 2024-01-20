@@ -15,6 +15,8 @@ The system that controls three or more vehicles by implementing platooning in a 
 - High Level Design
 - Interface MPU6050 module(gyroscope) on PACU
 - Interface Ethernet module on ECU/PACU
+- CCU server / client(common case)
+- platoon server / client
 - Create Deliverables for Develop
 
 **User3198352(User3198352)**
@@ -22,13 +24,15 @@ The system that controls three or more vehicles by implementing platooning in a 
 - Medium Level Design
 - Interface Motor Driver on ECU
 - Implement manual drive with HW and GUI
+- CCU client(leader case)
 - Create Deliverables for Develop
 
 **simpleis6est(simpleis6est)**
 - Documentation
 - Interface HC-SR04(Ultra sonic wave) on PACU
 - Interface GP2Y0A21(IR) on PACU
-- Jetson Nano Server/Client Implement
+- Implement manual drive with HW and GUI
+- Target board STM32F429ZI -> STM32F103C8T6  
 - Create Deliverables for Develop
 
 
