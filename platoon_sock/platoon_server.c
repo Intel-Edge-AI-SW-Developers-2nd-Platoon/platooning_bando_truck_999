@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 				printf("Usage : %s <port>\n",argv[0]);
 				exit(1);
 		}
-		fputs("IoT Server Start!!\n",stdout);
+		fputs("Platoon Server Start!!\n",stdout);
 
 		if(pthread_mutex_init(&mutx, NULL))
 				error_handling("mutex init error");

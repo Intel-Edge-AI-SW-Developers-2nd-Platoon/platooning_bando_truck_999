@@ -14,7 +14,8 @@
 #define ARR_CNT 16
 #define DATA_SIZE 1024
 
-void integral(int mode, char target, int pos);
+void set_auto_data(double f_pos_x, double f_pos_y);	
+void set_integral(int mode, char target, int pos);
 void * ccu_send_msg(void * arg);
 void * ccu_recv_msg(void * arg);
 void * platoon_send_msg(void * arg);
@@ -43,6 +44,16 @@ typedef struct {
 	double pos_y[DATA_SIZE];
 } CCU_BUF_T;
 
+typedef struct {
+	int dir_ptrn;
+	double x;
+	double y;
+	double ratio;
+	//double squared_dist;
+} AUTO_DRIVE_T;
+
+AUTO_DRIVE_T auto_data;
+
 pthread_mutex_t g_mutex[2];
 char name[2][NAME_SIZE]={"[Default]", "[Default]"};
 char msg[2][BUF_SIZE];
@@ -53,7 +64,7 @@ int pacu_pos[2];
 struct timeval prev_time, curr_time;
 
 double base_acc_x[2], base_acc_y[2], base_angle[2], base_gyro[2];
-int recv_data_flag[0];
+int recv_data_flag[2];
 
 int main(int argc, char *argv[]) {
 	int sock[2];
@@ -113,6 +124,38 @@ int main(int argc, char *argv[]) {
 	close(sock[0]);
 	close(sock[1]);
 	return 0;
+}
+
+void set_auto_data(double f_pos_x, double f_pos_y) {	
+	double my_pos_x = (ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_x[pacu_pos[1]]) / 2;
+	double my_pos_y = (ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2;
+	auto_data.x = f_pos_x - my_pos_x;
+	auto_data.y = f_pos_y - my_pos_y;
+
+	auto_data.ratio = abs(auto_data.y) / abs(auto_data.x);
+	
+	if (auto_data.ratio < 0.5) {
+		if (auto_data.x >= 0) {
+			auto_data.dir_ptrn = 1;
+		}
+		else {
+			auto_data.dir_ptrn = 2;
+		}
+	}
+	else {
+		if (auto_data.x >= 0 && auto_data.y >= 0) {
+			auto_data.dir_ptrn = 3;	
+		}
+		else if (auto_data.x >= 0 && auto_data.y < 0) {
+			auto_data.dir_ptrn = 4;
+		}
+		else if (auto_data.x < 0 && auto_data.y < 0) {
+			auto_data.dir_ptrn = 6;
+		}
+		else if (auto_data.x < 0 && auto_data.y >= 0) {
+			auto_data.dir_ptrn = 5;	
+		}
+	}
 }
 
 void set_integral(int mode, char target, int pos) {
@@ -307,7 +350,7 @@ void * platoon_recv_msg(void * arg) {
 
 	while(1) {
 		memset(name_msg,0x0,sizeof(name_msg));
-		str_len = read(*sock, name_msg, NAME_SIZE + BUF_SIZE );
+		str_len = read(*(sock + 1), name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
 			*sock = -1;
 			return NULL;
@@ -321,16 +364,25 @@ void * platoon_recv_msg(void * arg) {
 			if ( ++i >= ARR_CNT) break;
 			pToken = strtok(NULL, "[:@]");
 		}
-		pthread_mutex_unlock(&g_mutex[1]);
+		pthread_mutex_unlock(&g_mutex[0]);
 		if (!strcmp(pArray[1],"PLATOON")) {
 		}
 		else if (!strcmp(pArray[1], "CAR_A")) {
-			//sprintf(&msg[0][0], "[CAR_A]%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
-			sprintf(&msg[0][0], "[CAR_A]%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
+			double tmp_pos_x;
+			double tmp_pos_y;
+			sscanf(pArray[5], "%lf", &tmp_pos_x);	
+			sscanf(pArray[6], "%lf", &tmp_pos_y);	
+			set_auto_data(tmp_pos_x, tmp_pos_y);
+			//if (auto_data.ptrn == 1) {	
+			//sprintf(&msg[0][0], "[CONTROL]%s@%d\n", &name[1][0], auto_data.dir_ptrn);	
+			//write(*sock, &msg[0][0], strlen(&msg[0][0]));
+			//}
+
 			
+			sprintf(&msg[0][0], "[CONTROL]%s@%s@%s@%s\n", &name[1][0], pArray[2], pArray[3], pArray[4]);	
 			write(*sock, &msg[0][0], strlen(&msg[0][0]));
 		}
-		pthread_mutex_lock(&g_mutex[1]);
+		pthread_mutex_lock(&g_mutex[0]);
 	}
 }
 
@@ -350,27 +402,27 @@ void * timer_msg(void * arg) {
 			name_msg[0] = '\0';
 			
 			sprintf(&msg[1][0], "[GUI]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", &name[1][0], 
-					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
-					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
-					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
-					(ccu_buf[0].velo_x[pacu_pos[0]] + ccu_buf[1].velo_x[pacu_pos[1]]) / 2, 
-					(ccu_buf[0].velo_y[pacu_pos[0]] + ccu_buf[1].velo_y[pacu_pos[1]]) / 2, 
-					(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
-					(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
-					(pacu_buf[0].angle[pacu_pos[0]] + pacu_buf[1].angle[pacu_pos[1]]) / 2, 
-					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
-					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
+			pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
+			(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
+			(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
+			(ccu_buf[0].velo_x[pacu_pos[0]] + ccu_buf[1].velo_x[pacu_pos[1]]) / 2, 
+			(ccu_buf[0].velo_y[pacu_pos[0]] + ccu_buf[1].velo_y[pacu_pos[1]]) / 2, 
+			(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
+			(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
+			(pacu_buf[0].angle[pacu_pos[0]] + pacu_buf[1].angle[pacu_pos[1]]) / 2, 
+			(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
+			(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
 			
 			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 			
-			pthread_mutex_lock(&g_mutex[1]);
+			//pthread_mutex_lock(&g_mutex[1]);
 		
 			if (!strcmp(&name[1][0], "CAR_B") || !strcmp(&name[1][0], "CAR_C")) {
 				pthread_mutex_unlock(&g_mutex[1]);
 				memset(&msg[1][0],0,sizeof(&msg[1][0]));
 				name_msg[0] = '\0';
 			
-				sprintf(&msg[1][0], "[CAR_A]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", &name[1][0], 
+				sprintf(&msg[1][0], "[CAR_A]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", name[1], 
 				pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
 				(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
 				(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
@@ -383,9 +435,9 @@ void * timer_msg(void * arg) {
 				(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
 				//strcmp(name_msg, msg);	 
 				write(*sock, &msg[1][0], strlen(&msg[1][0]));
-			
-				pthread_mutex_lock(&g_mutex[1]);
 			}
+			pthread_mutex_lock(&g_mutex[1]);
+			
 			prev_time.tv_sec = curr_time.tv_sec;
 			prev_time.tv_usec = curr_time.tv_usec;
 			//printf("%lf\n", (double)curr_time.tv_sec + (double)curr_time.tv_usec / 1000000);		
