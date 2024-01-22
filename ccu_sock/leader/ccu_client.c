@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 	pthread_create(&ccu_snd_thread, NULL, ccu_send_msg, (void *)&sock[0]);
 	pthread_create(&platoon_rcv_thread, NULL, platoon_recv_msg, (void *)&sock[0]);
 	pthread_create(&platoon_snd_thread, NULL, platoon_send_msg, (void *)&sock[1]);
-	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[0]);
+	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[1]);
 
 	pthread_join(ccu_snd_thread, &thread_return);
 	pthread_join(platoon_snd_thread, &thread_return);
@@ -143,8 +143,14 @@ void set_integral(int mode, char target, int pos) {
 	if (!pos) return;
 	int interval = ((pacu_buf[mode].curr_time[pos].tv_usec - pacu_buf[mode].curr_time[pos-1].tv_usec))/1000000000;
 	if (target == 'a') {
-		ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
-		ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
+		if (mode == 0) {
+			ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
+		else if (mode == 1) {
+			ccu_buf[mode].velo_x[pos] = -1 * pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = -1 * pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
@@ -173,7 +179,7 @@ void * ccu_send_msg(void * arg) {
 		newset = initset;
 		ret = select(STDIN_FILENO + 1, &newset, NULL, NULL, &tv);
 		if(FD_ISSET(STDIN_FILENO, &newset)) {
-			pthread_mutex_lock(&g_mutex[0]);
+			//pthread_mutex_lock(&g_mutex[0]);
 			fgets(&msg[0][0], BUF_SIZE, stdin);
 			if(!strncmp(&msg[0][0],"quit\n",5)) {
 				*sock = -1;
@@ -190,7 +196,7 @@ void * ccu_send_msg(void * arg) {
 				*sock = -1;
 				return NULL;
 			}
-			pthread_mutex_unlock(&g_mutex[0]);
+			//pthread_mutex_unlock(&g_mutex[0]);
 		}
 		if(ret == 0) {
 			if(*sock == -1) return NULL;
@@ -207,7 +213,7 @@ void * ccu_recv_msg(void * arg) {
 	int str_len;
 
 	while(1) {
-		pthread_mutex_lock(&g_mutex[0]);
+		pthread_mutex_unlock(&g_mutex[0]);
 		memset(name_msg,0x0,sizeof(name_msg));
 		str_len = read(*sock, name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
@@ -251,7 +257,7 @@ void * ccu_recv_msg(void * arg) {
 				sprintf(&msg[0][0], "[CONTROL]CAR_A@%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
 				write(*sock, &msg[0][0], strlen(&msg[0][0]));
 		}
-		pthread_mutex_unlock(&g_mutex[0]);
+		pthread_mutex_lock(&g_mutex[0]);
 
 	}
 }
@@ -308,7 +314,7 @@ void * platoon_recv_msg(void * arg) {
 	int str_len;
 
 	while(1) {
-		//pthread_mutex_lock(&g_mutex[1]);
+		pthread_mutex_unlock(&g_mutex[1]);
 		memset(name_msg,0x0,sizeof(name_msg));
 		str_len = read(*(sock + 1), name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
@@ -338,7 +344,7 @@ void * platoon_recv_msg(void * arg) {
 		}
 		else if (!strcmp(pArray[1], "GUI")) {
 		}
-		//pthread_mutex_unlock(&g_mutex[1]);
+		pthread_mutex_lock(&g_mutex[1]);
 
 	}
 }
@@ -371,7 +377,7 @@ void * timer_msg(void * arg) {
 					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2
 				);	
 			//strcmp(name_msg, msg);	 
-			write(*(sock + 1), &msg[1][0], strlen(&msg[1][0]));
+			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 
 			memset(&msg[1][0],0,sizeof(&msg[1][0]));
 			name_msg[0] = '\0';
@@ -388,7 +394,7 @@ void * timer_msg(void * arg) {
 					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
 					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
 			//strcmp(name_msg, msg);
-			//write(*sock, &msg[1][0], strlen(&msg[1][0]));
+			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 			
 			pthread_mutex_lock(&g_mutex[1]);
 			prev_time.tv_sec = curr_time.tv_sec;
