@@ -249,6 +249,8 @@ void * ccu_recv_msg(void * arg) {
 				recv_data_flag[0] = 1;
 			}
 			if (recv_data_flag[0]) {
+				pacu_pos[0]++;
+				if (pacu_pos[0] >= DATA_SIZE) pacu_pos[0] = 0;
 				sscanf(pArray[2], "%lf", &(pacu_buf[0].dist[pacu_pos[0]]));
 				sscanf(pArray[3], "%lf", &(pacu_buf[0].acc_x[pacu_pos[0]]));
 				sscanf(pArray[4], "%lf", &(pacu_buf[0].acc_y[pacu_pos[0]]));
@@ -262,8 +264,6 @@ void * ccu_recv_msg(void * arg) {
 				gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 				set_integral(0, 'a', pacu_pos[0]);
 				set_integral(0, 'd', pacu_pos[0]);
-				pacu_pos[0]++;
-				if (pacu_pos[0] >= DATA_SIZE) pacu_pos[0] = 0;
 			}
 		}
 		else if (!strcmp(pArray[1], "PACU2")) {
@@ -275,6 +275,8 @@ void * ccu_recv_msg(void * arg) {
 				recv_data_flag[1] = 1;
 			}
 			if (recv_data_flag[1]) {
+				pacu_pos[1]++;
+				if (pacu_pos[1] >= DATA_SIZE) pacu_pos[1] = 0;
 				sscanf(pArray[2], "%lf", &(pacu_buf[1].dist[pacu_pos[1]]));	
 				sscanf(pArray[3], "%lf", &(pacu_buf[1].acc_x[pacu_pos[1]]));	
 				sscanf(pArray[4], "%lf", &(pacu_buf[1].acc_y[pacu_pos[1]]));	
@@ -288,8 +290,6 @@ void * ccu_recv_msg(void * arg) {
 				gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 				set_integral(1, 'a', pacu_pos[1]);
 				set_integral(1, 'd', pacu_pos[1]);
-				pacu_pos[1]++;
-				if (pacu_pos[1] >= DATA_SIZE) pacu_pos[1] = 0;
 			}
 		}
 		pthread_mutex_unlock(&g_mutex[0]);
