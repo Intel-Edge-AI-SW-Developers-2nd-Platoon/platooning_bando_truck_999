@@ -154,8 +154,8 @@ void set_integral(int mode, char target, int pos) {
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
-		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].velo_x[pos] * (double)interval;
-		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].velo_y[pos] * (double)interval;
+		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].pos_x[(pos-1)%DATA_SIZE] + ccu_buf[mode].velo_x[pos] * (double)interval;
+		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].pos_y[(pos-1)%DATA_SIZE] + ccu_buf[mode].velo_y[pos] * (double)interval;
 	}	
 }
 
