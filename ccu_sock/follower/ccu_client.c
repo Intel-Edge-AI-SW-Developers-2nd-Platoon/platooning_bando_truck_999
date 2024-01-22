@@ -253,6 +253,7 @@ void * ccu_recv_msg(void * arg) {
 				sscanf(pArray[5], "%lf", &base_gyro[0]);
 				sscanf(pArray[6], "%lf", &base_angle[0]);
 				recv_data_flag[0] = 1;
+				ccu_buf[0].pos_x[pacu_pos[0]] = -20.0;
 			}
 			if (recv_data_flag[0]) {
 				pacu_pos[0]++;
@@ -279,6 +280,7 @@ void * ccu_recv_msg(void * arg) {
 				sscanf(pArray[5], "%lf", &base_gyro[1]);	
 				sscanf(pArray[6], "%lf", &base_angle[1]);
 				recv_data_flag[1] = 1;
+				ccu_buf[1].pos_x[pacu_pos[1]] = -20.0;
 			}
 			if (recv_data_flag[1]) {
 				pacu_pos[1]++;
