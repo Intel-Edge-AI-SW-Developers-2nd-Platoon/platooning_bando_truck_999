@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
-//#include <cmath>
 #include <unistd.h>
 #include <string.h>
 #include <arpa/inet.h>
@@ -9,35 +7,28 @@
 #include <sys/socket.h>
 #include <pthread.h>
 #include <signal.h>
-#include <stdbool.h>
 #include <mysql/mysql.h>
 
 #define BUF_SIZE 100
 #define NAME_SIZE 20
-#define ARR_CNT 6
+#define ARR_CNT 4
 
 void* send_msg(void* arg);
 void* recv_msg(void* arg);
 void error_handling(char* msg);
 
-typedef struct {
-	double x, y;
-} axis;
-
-axis posBuf[2], veloBuf[2];
-
 char name[NAME_SIZE] = "[Default]";
 char msg[BUF_SIZE];
 
-bool msgState = false;
-
-void finish_with_error(MYSQL *con) {
+void finish_with_error(MYSQL *con)
+{
 	fprintf(stderr, "%s\n", mysql_error(con));
 	mysql_close(con);
 	exit(1);        
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	int sock;
 	struct sockaddr_in serv_addr;
 	pthread_t snd_thread, rcv_thread, mysql_thread;
@@ -64,10 +55,6 @@ int main(int argc, char* argv[]) {
 
 	sprintf(msg, "[%s:PASSWD]", name);
 	write(sock, msg, strlen(msg));
-
-	//sprintf(msg, "[ROB_SLV]MOTOR@ON\n");
-	//write(sock, msg, strlen(msg));
-
 	pthread_create(&rcv_thread, NULL, recv_msg, (void*)&sock);
 	pthread_create(&snd_thread, NULL, send_msg, (void*)&sock);
 
@@ -134,10 +121,10 @@ void* recv_msg(void* arg)
 	MYSQL_ROW sqlrow;
 	int res;
 	char sql_cmd[200] = { 0 };
-	char* host = "localhost";
-	char* user = "ROBY";
-	char* pass = "PASSWD";
-	char* dbname = "HUB";
+	char* host = "10.10.141.56";
+	char* user = "roby";
+	char* pass = "passwd";
+	char* dbname = "hub";
 
 	int* sock = (int*)arg;
 	int i;
@@ -184,10 +171,42 @@ void* recv_msg(void* arg)
 			pToken = strtok(NULL, "[:@]");
 
 		}
-		
-		if(!strcmp(pArray[1],"GET")) {
+//[KSH_SQL]GET@LAMP
+//[KSH_SQL]SET@LAMP@1
+		if(!strcmp(pArray[1],"GET"))
+		{
+			sprintf(sql_cmd, "SELECT value FROM device where name=\'%s\'",pArray[2]);
+			
+			if (mysql_query(conn, sql_cmd)) 
+			{
+				finish_with_error(conn);
+			}
+			MYSQL_RES *result = mysql_store_result(conn);
+			if (result == NULL) 
+			{
+				finish_with_error(conn);
+			}
+
+			int num_fields = mysql_num_fields(result);
+//            printf("num_fields : %d \n",num_fields);		
+
+			sqlrow = mysql_fetch_row(result);
+			
+			sprintf(sql_cmd,"[%s]%s@%s@%s\n",pArray[0],pArray[1],pArray[2],sqlrow[0]);
+  			write(*sock, sql_cmd, strlen(sql_cmd));
 		}
-		else if(!strcmp(pArray[1], "SET")) {
+		else if(!strcmp(pArray[1],"SET")){
+//  			sprintf(sql_cmd,"update device set value=%d where name=\'%s\'",atoi(pArray[3]) pArray[2]);
+  			sprintf(sql_cmd,"update device set value=%d, date=now(), time=now() where name=\'%s\'",atoi(pArray[3]), pArray[2]);
+
+
+			res = mysql_query(conn, sql_cmd);
+			if (!res)
+				printf("inserted %lu rows\n", (unsigned long)mysql_affected_rows(conn));
+			else
+				fprintf(stderr, "ERROR: %s[%d]\n", mysql_error(conn), mysql_errno(conn));
+			sprintf(sql_cmd,"[%s]%s@%s@%s\n",pArray[0],pArray[1],pArray[2],pArray[3]);
+  			write(*sock, sql_cmd, strlen(sql_cmd));
 		}
 	}
 //	mysql_free_result(res_ptr);
@@ -201,5 +220,6 @@ void error_handling(char* msg)
 	fputc('\n', stderr);
 	exit(1);
 }
+
 
 
