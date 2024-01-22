@@ -173,8 +173,8 @@ void set_integral(int mode, char target, int pos) {
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
-		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].velo_x[pos] * (double)interval;
-		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].velo_y[pos] * (double)interval;
+		ccu_buf[mode].pos_x[pos] = ccu_buf[mode].pos_x[(pos-1)%DATA_SIZE] + ccu_buf[mode].velo_x[pos] * (double)interval;
+		ccu_buf[mode].pos_y[pos] = ccu_buf[mode].pos_y[(pos-1)%DATA_SIZE] + ccu_buf[mode].velo_y[pos] * (double)interval;
 	}	
 }
 
@@ -379,13 +379,9 @@ void * platoon_recv_msg(void * arg) {
 			sscanf(pArray[5], "%lf", &tmp_pos_x);	
 			sscanf(pArray[6], "%lf", &tmp_pos_y);	
 			set_auto_data(tmp_pos_x, tmp_pos_y);
-			//if (auto_data.ptrn == 1) {	
 			//sprintf(&msg[0][0], "[CONTROL]%s@%d\n", &name[1][0], auto_data.dir_ptrn);	
-			//write(*sock, &msg[0][0], strlen(&msg[0][0]));
-			//}
 
-			
-			sprintf(&msg[0][0], "[CONTROL]%s@%s@%s@%s\n", &name[1][0], pArray[2], pArray[3], pArray[4]);	
+			sprintf(&msg[0][0], "[CONTROL]%s@%d@%s@%s\n", &name[1][0], auto_data.dir_ptrn, pArray[3], pArray[4]);	
 			write(*sock, &msg[0][0], strlen(&msg[0][0]));
 		}
 		pthread_mutex_lock(&g_mutex[0]);
