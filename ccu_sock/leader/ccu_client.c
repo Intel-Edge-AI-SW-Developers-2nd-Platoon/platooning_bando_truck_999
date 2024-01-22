@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
 	pthread_create(&ccu_snd_thread, NULL, ccu_send_msg, (void *)&sock[0]);
 	pthread_create(&platoon_rcv_thread, NULL, platoon_recv_msg, (void *)&sock[0]);
 	pthread_create(&platoon_snd_thread, NULL, platoon_send_msg, (void *)&sock[1]);
-	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[0]);
+	pthread_create(&timer_thread, NULL, timer_msg, (void *)&sock[1]);
 
 	pthread_join(ccu_snd_thread, &thread_return);
 	pthread_join(platoon_snd_thread, &thread_return);
@@ -224,6 +224,8 @@ void * ccu_recv_msg(void * arg) {
 			pToken = strtok(NULL, "[:@]");
 		}
 		if (!strcmp(pArray[1],"PACU1")) {
+			pacu_pos[0]++;
+			if (pacu_pos[0] >= DATA_SIZE) pacu_pos[0] = 0;
 			sscanf(pArray[2], "%lf", &(pacu_buf[0].dist[pacu_pos[0]]));	
 			sscanf(pArray[3], "%lf", &(pacu_buf[0].acc_x[pacu_pos[0]]));	
 			sscanf(pArray[4], "%lf", &(pacu_buf[0].acc_y[pacu_pos[0]]));	
@@ -232,10 +234,10 @@ void * ccu_recv_msg(void * arg) {
 			gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 			set_integral(0, 'a', pacu_pos[0]);
 			set_integral(0, 'd', pacu_pos[0]);
-			pacu_pos[0]++;
-			if (pacu_pos[0] >= DATA_SIZE) pacu_pos[0] = 0;
 		}
 		else if (!strcmp(pArray[1], "PACU2")) {
+			pacu_pos[1]++;
+			if (pacu_pos[1] >= DATA_SIZE) pacu_pos[1] = 0;
 			sscanf(pArray[2], "%lf", &(pacu_buf[1].dist[pacu_pos[1]]));	
 			sscanf(pArray[3], "%lf", &(pacu_buf[1].acc_x[pacu_pos[1]]));	
 			sscanf(pArray[4], "%lf", &(pacu_buf[1].acc_y[pacu_pos[1]]));	
@@ -244,8 +246,6 @@ void * ccu_recv_msg(void * arg) {
 			gettimeofday(&(pacu_buf[0].curr_time[pacu_pos[0]]), NULL);
 			set_integral(1, 'a', pacu_pos[1]);
 			set_integral(1, 'd', pacu_pos[1]);
-			pacu_pos[1]++;
-			if (pacu_pos[1] >= DATA_SIZE) pacu_pos[1] = 0;
 		}
 		else if (!strcmp(pArray[1], "CAR_A")) {
 				sprintf(&msg[0][0], "[CONTROL]CAR_A@%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
@@ -371,24 +371,17 @@ void * timer_msg(void * arg) {
 					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2
 				);	
 			//strcmp(name_msg, msg);	 
-			write(*(sock + 1), &msg[1][0], strlen(&msg[1][0]));
+			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 
 			memset(&msg[1][0],0,sizeof(&msg[1][0]));
 			name_msg[0] = '\0';
 
-			sprintf(&msg[1][0], "[CAR_B]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", &name[1][0],
-					pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]],
-					(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2,
-					(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2,
-					(ccu_buf[0].velo_x[pacu_pos[0]] + ccu_buf[1].velo_x[pacu_pos[1]]) / 2,
-					(ccu_buf[0].velo_y[pacu_pos[0]] + ccu_buf[1].velo_y[pacu_pos[1]]) / 2,
+			sprintf(&msg[1][0], "[CAR_B]%s@%d@%d@%d@%lf@%lf\n", &name[1][0],
+					curr_direction[0], curr_pwm[0], curr_pwm[0],
 					(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2,
-					(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2,
-					(pacu_buf[0].angle[pacu_pos[0]] + pacu_buf[1].angle[pacu_pos[1]]) / 2,
-					(pacu_buf[0].gyro[pacu_pos[0]] + pacu_buf[1].gyro[pacu_pos[1]]) / 2,
-					(long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_sec + pacu_buf[1].curr_time[pacu_pos[1]].tv_sec) * 500 + (long long)(pacu_buf[0].curr_time[pacu_pos[0]].tv_usec + pacu_buf[1].curr_time[pacu_pos[1]].tv_usec) * 500);
-			//strcmp(name_msg, msg);
-			//write(*sock, &msg[1][0], strlen(&msg[1][0]));
+					(ccu_buf[0].pos_y[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2
+					);
+			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 			
 			pthread_mutex_lock(&g_mutex[1]);
 			prev_time.tv_sec = curr_time.tv_sec;

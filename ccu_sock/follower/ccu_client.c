@@ -163,15 +163,6 @@ void set_integral(int mode, char target, int pos) {
 	int interval = ((pacu_buf[mode].curr_time[pos].tv_usec - pacu_buf[mode].curr_time[pos-1].tv_usec))/1000000000;
 	if (target == 'a') {
 		if (mode == 0) {
-<<<<<<< HEAD
-			ccu_buf[mode].velo_x[pos] = -1 * pacu_buf[mode].acc_x[pos] * (double)interval;
-			ccu_buf[mode].velo_y[pos] = -1 * pacu_buf[mode].acc_y[pos] * (double)interval;
-		}
-		else if (mode == 1) {
-			ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
-			ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
-		}
-=======
 			ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
 			ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
 		}
@@ -179,7 +170,6 @@ void set_integral(int mode, char target, int pos) {
 			ccu_buf[mode].velo_x[pos] = -1 * pacu_buf[mode].acc_x[pos] * (double)interval;
 			ccu_buf[mode].velo_y[pos] = -1 * pacu_buf[mode].acc_y[pos] * (double)interval;
 		}
->>>>>>> f5187572036e7da9297e882651deef71e8ba2546
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
