@@ -213,7 +213,7 @@ void * ccu_recv_msg(void * arg) {
 	int str_len;
 
 	while(1) {
-		//pthread_mutex_lock(&g_mutex[0]);
+		pthread_mutex_unlock(&g_mutex[0]);
 		memset(name_msg,0x0,sizeof(name_msg));
 		str_len = read(*sock, name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
@@ -257,7 +257,7 @@ void * ccu_recv_msg(void * arg) {
 				sprintf(&msg[0][0], "[CONTROL]CAR_A@%s@%s@%s\n", pArray[2], pArray[3], pArray[4]);
 				write(*sock, &msg[0][0], strlen(&msg[0][0]));
 		}
-		//pthread_mutex_unlock(&g_mutex[0]);
+		pthread_mutex_lock(&g_mutex[0]);
 
 	}
 }
@@ -314,7 +314,7 @@ void * platoon_recv_msg(void * arg) {
 	int str_len;
 
 	while(1) {
-		//pthread_mutex_lock(&g_mutex[1]);
+		pthread_mutex_unlock(&g_mutex[1]);
 		memset(name_msg,0x0,sizeof(name_msg));
 		str_len = read(*(sock + 1), name_msg, NAME_SIZE + BUF_SIZE );
 		if(str_len <= 0) {
@@ -344,7 +344,7 @@ void * platoon_recv_msg(void * arg) {
 		}
 		else if (!strcmp(pArray[1], "GUI")) {
 		}
-		//pthread_mutex_unlock(&g_mutex[1]);
+		pthread_mutex_lock(&g_mutex[1]);
 
 	}
 }
@@ -358,7 +358,7 @@ void * timer_msg(void * arg) {
 		gettimeofday(&curr_time, NULL);
 		global_interval = ((double)(curr_time.tv_sec - prev_time.tv_sec) * 1000 + (double)(curr_time.tv_usec - prev_time.tv_usec)/1000);
 		if (global_interval >= 100) {
-			//pthread_mutex_unlock(&g_mutex[1]);
+			pthread_mutex_unlock(&g_mutex[1]);
 			
         		//for (int i = 0; i < 2; i++) {
 				memset(&msg[1][0],0,sizeof(&msg[1][0]));
@@ -396,7 +396,7 @@ void * timer_msg(void * arg) {
 			//strcmp(name_msg, msg);
 			write(*sock, &msg[1][0], strlen(&msg[1][0]));
 			
-			//pthread_mutex_lock(&g_mutex[1]);
+			pthread_mutex_lock(&g_mutex[1]);
 			prev_time.tv_sec = curr_time.tv_sec;
 			prev_time.tv_usec = curr_time.tv_usec;
 			//printf("%ld\n", curr_time.tv_usec);	
