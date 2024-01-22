@@ -162,8 +162,24 @@ void set_integral(int mode, char target, int pos) {
 	if (!pos) return;
 	int interval = ((pacu_buf[mode].curr_time[pos].tv_usec - pacu_buf[mode].curr_time[pos-1].tv_usec))/1000000000;
 	if (target == 'a') {
-		ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
-		ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
+		if (mode == 0) {
+<<<<<<< HEAD
+			ccu_buf[mode].velo_x[pos] = -1 * pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = -1 * pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
+		else if (mode == 1) {
+			ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
+=======
+			ccu_buf[mode].velo_x[pos] = pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
+		else if (mode == 1) {
+			ccu_buf[mode].velo_x[pos] = -1 * pacu_buf[mode].acc_x[pos] * (double)interval;
+			ccu_buf[mode].velo_y[pos] = -1 * pacu_buf[mode].acc_y[pos] * (double)interval;
+		}
+>>>>>>> f5187572036e7da9297e882651deef71e8ba2546
 	}
 	else if (target = 'v') {
 		if (!ccu_buf[mode].velo_x[pos]) return;
@@ -403,8 +419,8 @@ void * timer_msg(void * arg) {
 			
 			sprintf(&msg[1][0], "[GUI]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", &name[1][0], 
 			pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
-			(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
-			(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
+			(pacu_buf[0].acc_x[pacu_pos[0]] - pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
+			(pacu_buf[0].acc_y[pacu_pos[0]] - pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
 			(ccu_buf[0].velo_x[pacu_pos[0]] + ccu_buf[1].velo_x[pacu_pos[1]]) / 2, 
 			(ccu_buf[0].velo_y[pacu_pos[0]] + ccu_buf[1].velo_y[pacu_pos[1]]) / 2, 
 			(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
@@ -424,8 +440,8 @@ void * timer_msg(void * arg) {
 			
 				sprintf(&msg[1][0], "[CAR_A]%s@DATA@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lf@%lld\n", name[1], 
 				pacu_buf[0].dist[pacu_pos[0]], pacu_buf[1].dist[pacu_pos[1]], 
-				(pacu_buf[0].acc_x[pacu_pos[0]] + pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
-				(pacu_buf[0].acc_y[pacu_pos[0]] + pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
+				(pacu_buf[0].acc_x[pacu_pos[0]] - pacu_buf[1].acc_x[pacu_pos[1]]) / 2, 
+				(pacu_buf[0].acc_y[pacu_pos[0]] - pacu_buf[1].acc_y[pacu_pos[1]]) / 2, 
 				(ccu_buf[0].velo_x[pacu_pos[0]] + ccu_buf[1].velo_x[pacu_pos[1]]) / 2, 
 				(ccu_buf[0].velo_y[pacu_pos[0]] + ccu_buf[1].velo_y[pacu_pos[1]]) / 2, 
 				(ccu_buf[0].pos_x[pacu_pos[0]] + ccu_buf[1].pos_y[pacu_pos[1]]) / 2, 
