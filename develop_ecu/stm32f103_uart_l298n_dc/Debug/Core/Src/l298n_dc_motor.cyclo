@@ -1,0 +1,4 @@
+../Core/Src/l298n_dc_motor.c:21:6:l298n_dc_motor_init	1
+../Core/Src/l298n_dc_motor.c:32:6:l298n_dc_motor_direction_set	7
+../Core/Src/l298n_dc_motor.c:98:6:l298n_dc_motor_pwm_set	1
+../Core/Src/l298n_dc_motor.c:104:6:l298n_dc_motor_movement	1
